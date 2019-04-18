@@ -1,4 +1,4 @@
-package com.example.awarddialdemo.utilV1;
+package com.example.awarddialdemo.util;
 
 import java.util.*;
 

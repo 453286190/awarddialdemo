@@ -1,4 +1,4 @@
-package com.example.awarddialdemo.dto;
+package com.example.awarddialdemo.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

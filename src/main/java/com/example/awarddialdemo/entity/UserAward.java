@@ -1,6 +1,5 @@
 package com.example.awarddialdemo.entity;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,18 +7,19 @@ import lombok.NoArgsConstructor;
 import javax.persistence.Table;
 
 /**
- * 参加抽奖人
  * @param
  * @author: 闫沛鑫
- * @date: 2019-04-17 15:03
+ * @date: 2019-04-18 10:32
  * @return
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "user")
-public class User {
+@Table(name = "user_award")
+public class UserAward {
     private Long id;
-    private String username;
-
+    private Long userId;
+    private Long AwardId;
+//    奖品秘钥
+    private String AwardKey;
 }

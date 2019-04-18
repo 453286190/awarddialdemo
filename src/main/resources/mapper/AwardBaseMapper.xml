@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="pers.kraken.mybatis.mapper.AwardBaseMapper">
+  <resultMap id="BaseResultMap" type="com.example.awarddialdemo.entity.AwardBase">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="award_type" jdbcType="VARCHAR" property="awardType" />
+    <result column="award_odd" jdbcType="DOUBLE" property="awardOdd" />
+  </resultMap>
+</mapper>
