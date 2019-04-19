@@ -3,6 +3,7 @@ package com.example.awarddialdemo.sevice.impl;
 import com.example.awarddialdemo.entity.Award;
 import com.example.awarddialdemo.entity.AwardBase;
 import com.example.awarddialdemo.sevice.AwardService;
+import com.example.awarddialdemo.util.EntryUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
@@ -16,6 +17,11 @@ import java.util.List;
  */
 @Service
 public class AwardServiceImpl implements AwardService {
+
+    /**
+     *
+     * @param awardLevelSum 奖品数量
+     */
     @Override
     public void addAward(String awardLevelSum) {
         String awardTotleType = "一二三四五六七八九十";
