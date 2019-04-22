@@ -53,7 +53,9 @@ public class AwardServiceImpl implements AwardService {
         for(int i = 0;i < awardAddInfo.getAwardLevelSum();i++){
             AwardBase awardBase = new AwardBase();
             //奖品类型
-            awardBase.setAwardLevel(awardTotleType.charAt(i) + "等奖");
+            awardBase.setAwardLevel(i + 1);
+            //奖品说明
+            awardBase.setDescription(awardTotleType.charAt(i) + "等奖");
             //中奖概率
             awardBase.setAwardOdd(0.0);
             awardBase.setAwardSend(0);

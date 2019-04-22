@@ -6,9 +6,10 @@
       WARNING - @mbg.generated
     -->
     <id column="id" jdbcType="BIGINT" property="id" />
-    <result column="award_level" jdbcType="VARCHAR" property="awardLevel" />
+    <result column="award_level" jdbcType="INTEGER" property="awardLevel" />
     <result column="award_odd" jdbcType="DOUBLE" property="awardOdd" />
     <result column="award_total" jdbcType="INTEGER" property="awardTotal" />
     <result column="award_send" jdbcType="INTEGER" property="awardSend" />
+    <result column="description" jdbcType="VARCHAR" property="description" />
   </resultMap>
 </mapper>

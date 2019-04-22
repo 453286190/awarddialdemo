@@ -22,7 +22,7 @@ public class AwardBase {
     private Long id;
     //   奖品类型
     @Column(name = "award_level")
-    private String awardLevel;
+    private Integer awardLevel;
     //   中奖概率
     @Column(name = "award_odd")
     private Double awardOdd;
@@ -32,5 +32,8 @@ public class AwardBase {
     //   发放数量
     @Column(name = "award_send")
     private Integer awardSend;
+    //   奖品说明
+    @Column(name = "description")
+    private String description;
 
 }
