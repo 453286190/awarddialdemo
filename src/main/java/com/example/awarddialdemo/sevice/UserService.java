@@ -8,5 +8,5 @@ package com.example.awarddialdemo.sevice;
  */
 public interface UserService {
 
-    void addUser();
+    void addUser(Integer userSum);
 }

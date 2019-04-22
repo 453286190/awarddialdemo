@@ -1,8 +1,11 @@
 package com.example.awarddialdemo.mapper;
 
+import com.example.awarddialdemo.common.MyBaseMapper;
 import com.example.awarddialdemo.entity.UserAward;
-import tk.mybatis.mapper.common.Mapper;
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Repository;
 
-
-public interface UserAwardMapper extends Mapper<UserAward> {
+@Mapper
+@Repository
+public interface UserAwardMapper extends MyBaseMapper<UserAward> {
 }

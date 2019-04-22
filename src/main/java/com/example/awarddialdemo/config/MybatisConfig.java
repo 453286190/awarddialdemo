@@ -31,7 +31,7 @@ public class MybatisConfig {
         MapperScannerConfigurer mapperScannerConfigurer = new MapperScannerConfigurer();
         mapperScannerConfigurer.setBasePackage("com.example.awarddialdemo.mapper");
         Properties properties = new Properties();
-        properties.setProperty("mappers","com.example.awarddialdemo.common.BaseMapper");
+        properties.setProperty("mappers","com.example.awarddialdemo.common.MyBaseMapper");
         mapperScannerConfigurer.setProperties(properties);
         return mapperScannerConfigurer;
     }

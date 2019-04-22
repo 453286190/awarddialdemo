@@ -1,13 +1,12 @@
 package com.example.awarddialdemo.controller;
 
+import com.example.awarddialdemo.dto.AwardAddInfo;
 import com.example.awarddialdemo.entity.Award;
+import com.example.awarddialdemo.exception.MessageException;
 import com.example.awarddialdemo.sevice.AwardService;
 import com.example.awarddialdemo.vo.ResponseVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @param
@@ -23,13 +22,24 @@ public class AwardController {
     private AwardService awardService;
 
     /**
-     * 新增奖品,默认几等奖就发几份,中奖比率改库
-     * @param awardLevelSum 一共有几等奖品
+     * 新增奖品，中奖比率改库
+     * @param awardAddInfo
      * @return
      */
     @GetMapping("/add")
-    public ResponseVO addAward(@RequestParam String awardLevelSum){
-        awardService.addAward(awardLevelSum);
+    public ResponseVO addAwardLevel(@RequestBody AwardAddInfo awardAddInfo) throws MessageException {
+        awardService.addAward(awardAddInfo);
+        return new ResponseVO();
+    }
+
+    /**
+     * 抽奖
+     * 默认参与用户为所有用户，奖品为所有奖品
+     * @return
+     */
+    @GetMapping
+    public ResponseVO sendAward(){
+        awardService.sendAward();
         return new ResponseVO();
     }
 }

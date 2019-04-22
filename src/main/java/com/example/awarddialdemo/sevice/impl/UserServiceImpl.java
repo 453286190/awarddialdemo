@@ -24,9 +24,9 @@ public class UserServiceImpl implements UserService{
 
     @Override
     @Transactional
-    public void addUser() {
+    public void addUser(Integer userSum) {
         List<User> userList = new LinkedList<>();
-        for(int i = 0;i < 500;i++){
+        for(int i = 0;i < userSum;i++){
             User user = new User();
             user.setUsername("用户" + (i + 1));
             userList.add(user);
@@ -38,6 +38,5 @@ public class UserServiceImpl implements UserService{
 
     public static void main(String[] args) {
         UserServiceImpl userService = new UserServiceImpl();
-        userService.addUser();
     }
 }

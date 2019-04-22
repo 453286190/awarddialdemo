@@ -1,5 +1,8 @@
 package com.example.awarddialdemo.sevice;
 
+import com.example.awarddialdemo.dto.AwardAddInfo;
+import com.example.awarddialdemo.exception.MessageException;
+
 /**
  * @param
  * @author: 闫沛鑫
@@ -8,5 +11,6 @@ package com.example.awarddialdemo.sevice;
  */
 public interface AwardService {
 
-    public void addAward(String awardLevelSum);
+    void addAward(AwardAddInfo awardAddInfo) throws MessageException;
+    void sendAward();
 }

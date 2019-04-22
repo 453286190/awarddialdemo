@@ -3,6 +3,7 @@ package com.example.awarddialdemo.util;
 import java.util.*;
 
 /**
+ * 时间复杂度O(1)的离散采样算法
  * @param
  * @author: 闫沛鑫
  * @date: 2019-04-17 16:04
