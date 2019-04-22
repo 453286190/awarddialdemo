@@ -11,7 +11,7 @@
  Target Server Version : 50559
  File Encoding         : 65001
 
- Date: 18/04/2019 18:07:21
+ Date: 22/04/2019 18:50:40
 */
 
 SET NAMES utf8mb4;
@@ -26,7 +26,7 @@ CREATE TABLE `award`  (
   `award_key` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '奖品秘钥',
   `is_send` bit(1) NOT NULL COMMENT '是否已发出',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 61 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for award_base
@@ -34,10 +34,13 @@ CREATE TABLE `award`  (
 DROP TABLE IF EXISTS `award_base`;
 CREATE TABLE `award_base`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
-  `award_type` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `award_level` int(20) NOT NULL COMMENT '奖品等级',
   `award_odd` double(10, 2) NOT NULL COMMENT '中奖概率',
+  `award_total` int(20) NOT NULL COMMENT '奖品总数',
+  `award_send` int(20) NOT NULL COMMENT '发放数量',
+  `description` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '奖品说明',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 21 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for user
