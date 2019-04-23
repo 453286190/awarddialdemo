@@ -12,5 +12,6 @@ import com.example.awarddialdemo.exception.MessageException;
 public interface AwardService {
 
     void addAward(AwardAddInfo awardAddInfo) throws MessageException;
-    void sendAward();
+    void sendAward() throws MessageException;
+    void clearAward();
 }

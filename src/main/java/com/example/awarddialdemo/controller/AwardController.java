@@ -37,9 +37,19 @@ public class AwardController {
      * 默认参与用户为所有用户，奖品为所有奖品
      * @return
      */
-    @GetMapping
-    public ResponseVO sendAward(){
+    @GetMapping("/send")
+    public ResponseVO sendAward() throws MessageException {
         awardService.sendAward();
+        return new ResponseVO();
+    }
+
+    /**
+     * 初始化奖品
+     * @return
+     */
+    @GetMapping("/clear")
+    public ResponseVO clearAward(){
+        awardService.clearAward();
         return new ResponseVO();
     }
 }

@@ -8,6 +8,7 @@ import com.example.awarddialdemo.entity.UserAward;
 import com.example.awarddialdemo.exception.MessageException;
 import com.example.awarddialdemo.mapper.AwardBaseMapper;
 import com.example.awarddialdemo.mapper.AwardMapper;
+import com.example.awarddialdemo.mapper.UserAwardMapper;
 import com.example.awarddialdemo.mapper.UserMapper;
 import com.example.awarddialdemo.sevice.AwardService;
 import com.example.awarddialdemo.util.AliasMethod;
@@ -19,6 +20,8 @@ import tk.mybatis.mapper.entity.Example;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Vector;
+import java.util.stream.Collectors;
 
 /**
  * @param
@@ -35,9 +38,11 @@ public class AwardServiceImpl implements AwardService {
     private AwardMapper awardMapper;
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private UserAwardMapper userAwardMapper;
 
     /**
-     * 新增奖品，中奖比率改库
+     * 新增奖品
      * @param awardAddInfo
      */
     @Override
@@ -70,6 +75,7 @@ public class AwardServiceImpl implements AwardService {
             //奖品总数
             for(int j = 0;j < awardAddInfo.getAwardDTOList().get(i).getAwardNum();j++){
                 Award award = new Award();
+                award.setAwardLevel(i + 1);
                 award.setAwardKey("");
                 award.setIsSend(false);
                 awardList.add(award);
@@ -95,9 +101,8 @@ public class AwardServiceImpl implements AwardService {
      */
     @Override
     @Transactional
-    public void sendAward() {
+    public void sendAward() throws MessageException {
         List<AwardBase> awardBaseList = awardBaseMapper.selectAll();
-        List<Award> awardList = awardMapper.selectAll();
         List<User> userList = userMapper.selectAll();
         List<Double> oddList = new LinkedList<>();
         for(AwardBase awardBase : awardBaseList){
@@ -107,10 +112,12 @@ public class AwardServiceImpl implements AwardService {
         for(Double d : oddList){
             allAdds += d;
         }
-        if(allAdds != 1.0){
+        if(allAdds != 1.0 && allAdds != 0.0){
             for(int i = 0;i < oddList.size();i++){
                 oddList.set(i,1 / allAdds * oddList.get(i));
             }
+        }else{
+            throw new MessageException("allAdds = " + allAdds + "有误");
         }
         //是否中奖，0.03为中奖概率，0.97为未中奖概率
         List<Double> isAwardList = new LinkedList<>();
@@ -121,32 +128,163 @@ public class AwardServiceImpl implements AwardService {
         //中几等奖采样
         AliasMethod aliasMethodOdd = new AliasMethod(oddList);
         //中奖统计
-        Integer awardTrue = 0;
+        Integer awardYes = 0;
         //未中奖统计
-        Integer awardFalse = 0;
+        Integer awardNo = 0;
         //中奖人
-        List<UserAward> userAwardListAwardYes = new LinkedList<>();
+        Vector<UserAward> userAwardListAwardYes = new Vector<>(new LinkedList<>());
         //未中奖人
-        List<UserAward> userAwardListAwardNo = new LinkedList<>();
+        Vector<UserAward> userAwardListAwardNo = new Vector<>(new LinkedList<>());
         for(User user : userList){
             //中奖人数已满
-            if(awardTrue >= 15){
+            if(awardYes >= 15){
                 userAwardListAwardNo.add(addUserAwardNo(user));
-                awardFalse ++;
-            }else if(awardTrue < 15 && awardTrue > 0){
+                awardNo ++;
+            }else if(awardYes < 15 && awardYes >= 0){
                 Integer isAward = aliasMethodIsAward.next();
 //              中奖
                 if(isAward.equals(0)){
-                    Integer awardLevel = aliasMethodOdd.next();
+                    //抽奖
+                    List<AwardBase> awardBaseList1 = rollAward(aliasMethodOdd);
+                    if(awardBaseList1 != null && awardBaseList1.size() > 0){
+                        AwardBase awardBase = awardBaseList1.get(0);
+                        Integer awardNotSend = awardBase.getAwardTotal() - awardBase.getAwardSend();
+//                        该等级奖品未发完
+                        if(awardNotSend > 0){
+                            //获取奖品
+                            Award award = getAward(awardBase);
+                            userAwardListAwardYes.add(addUserAwardYes(user,award));
+                            awardYes++;
+//                        该等级奖品已发完
+                        }else{
+                            List<Integer> awardLevelNotSendList = getAwardLevelNotSend();
+                            if(awardLevelNotSendList != null && awardLevelNotSendList.size() > 0){
+                                a:while (true){
+                                    Integer awardLevel = aliasMethodOdd.next();
+                                    if(awardLevelNotSendList.contains(awardLevel)){
+                                        Award award = getAward(getAwardBaseByAwardLevel(awardLevel));
+                                        userAwardListAwardYes.add(addUserAwardYes(user,award));
+                                        awardYes++;
+                                        System.out.println("awardLevel:" + awardLevel);
+                                        System.out.println("awardYes:" + awardYes);
+                                        break a;
+                                    }else if(awardLevelNotSendList.size() == 1){
+                                        Award award = getAward(getAwardBaseByAwardLevel(awardLevelNotSendList.get(0)));
+                                        userAwardListAwardYes.add(addUserAwardYes(user,award));
+                                        awardYes++;
+                                        break a;
+                                    }
+                                }
+//                                所有等级的奖品都发完了
+                            }else{
+                                userAwardListAwardNo.add(addUserAwardNo(user));
+                                awardNo ++;
+                            }
+                        }
+                    }
 //              未中奖
                 }else if(isAward.equals(1)){
                     userAwardListAwardNo.add(addUserAwardNo(user));
-                    awardFalse ++;
+                    awardNo ++;
                 }
-                awardTrue ++;
+
             }
         }
+        if(userAwardListAwardYes.size() > 0){
+            userAwardMapper.insertList(userAwardListAwardYes);
+        }
+        if(userAwardListAwardNo.size() > 0){
+            userAwardMapper.insertList(userAwardListAwardNo);
+        }
+        System.out.println("awardNo:" + awardNo + ";  awardYes:" + awardYes + ";  total:" + (awardNo + awardYes));
 
+    }
+
+    /**
+     * 清除中奖信息
+     */
+    @Override
+    public void clearAward() {
+        List<AwardBase> awardBaseList = awardBaseMapper.selectAll();
+        for(AwardBase awardBase : awardBaseList){
+            awardBase.setAwardSend(0);
+            awardBaseMapper.updateByPrimaryKeySelective(awardBase);
+        }
+        List<Award> awardList = awardMapper.selectAll();
+        for(Award award : awardList){
+            award.setIsSend(false);
+            awardMapper.updateByPrimaryKeySelective(award);
+        }
+    }
+
+    /**
+     * 根据奖品等级获取奖品base
+     * @param awardLevel
+     * @return
+     * @throws MessageException
+     */
+    public AwardBase getAwardBaseByAwardLevel(Integer awardLevel) throws MessageException {
+        Example example = new Example(AwardBase.class);
+        example.createCriteria().andEqualTo("awardLevel",awardLevel);
+        List<AwardBase> awardBaseList = awardBaseMapper.selectByExample(example);
+        if(awardBaseList != null && awardBaseList.size()> 0){
+            return awardBaseList.get(0);
+        }else{
+            throw new MessageException("奖品等级：" + awardLevel + "有误");
+        }
+    }
+
+    /**
+     * 查看有哪些未发完的奖品等级
+     * @return
+     */
+    public List<Integer> getAwardLevelNotSend(){
+        List<Integer> awardLevelList = new LinkedList<>();
+        List<AwardBase> awardBaseList = awardBaseMapper.selectAll();
+        for(AwardBase awardBase : awardBaseList){
+            //未发完
+            if(awardBase.getAwardTotal() - awardBase.getAwardSend() > 0){
+                awardLevelList.add(awardBase.getAwardLevel());
+            }
+        }
+        return awardLevelList;
+    }
+
+    /**
+     * 获取奖品
+     * @param awardBase
+     * @return
+     * @throws MessageException
+     */
+    public Award getAward(AwardBase awardBase) throws MessageException {
+        Integer awardLevel = awardBase.getAwardLevel();
+        Example example = new Example(Award.class);
+        example.createCriteria().andEqualTo("awardLevel",awardLevel).andEqualTo("isSend",false);
+        List<Award> awardNotSendList = awardMapper.selectByExample(example);
+        if(awardNotSendList !=null && awardNotSendList.size()> 0){
+            Award award = awardNotSendList.get(0);
+            award.setIsSend(true);
+            awardMapper.updateByPrimaryKeySelective(award);
+            awardBase.setAwardSend(awardBase.getAwardSend() + 1);
+            awardBaseMapper.updateByPrimaryKeySelective(awardBase);
+            return award;
+        }else {
+            throw new MessageException("奖品表未发数量与奖品base表记录不符");
+        }
+    }
+
+
+    /**
+     * 抽奖
+     * @param aliasMethodOdd
+     * @return
+     */
+    public List<AwardBase> rollAward(AliasMethod aliasMethodOdd){
+        Integer awardLevel = aliasMethodOdd.next();
+        Example example = new Example(AwardBase.class);
+        example.createCriteria().andEqualTo("awardLevel",awardLevel);
+        List<AwardBase> awardBaseList = awardBaseMapper.selectByExample(example);
+        return awardBaseList;
     }
 
     /**
@@ -154,11 +292,11 @@ public class AwardServiceImpl implements AwardService {
      * @param user
      * @return
      */
-    public UserAward addUserAwardYes(User user){
+    public UserAward addUserAwardYes(User user,Award award){
         UserAward userAward = new UserAward();
         userAward.setUserId(user.getId());
-        userAward.setAwardId(0L);
-        userAward.setAwardKey("未中奖");
+        userAward.setAwardId(award.getId());
+        userAward.setAwardKey(award.getAwardKey());
         return userAward;
     }
 

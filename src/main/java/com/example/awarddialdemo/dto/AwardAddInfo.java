@@ -15,6 +15,8 @@ import java.util.List;
 public class AwardAddInfo {
 //    奖品等级总数
     private Integer awardLevelSum;
+//    参与总人数
+    private Integer userSum;
 //    每个等级的奖品数量
     private List<AwardDTO> awardDTOList;
 

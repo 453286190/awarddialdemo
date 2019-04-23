@@ -26,6 +26,9 @@ public class Award {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+//    奖品等级
+    @Column(name = "award_level")
+    private Integer awardLevel;
 //   奖品秘钥
     @Column(name = "award_key")
     private String awardKey;

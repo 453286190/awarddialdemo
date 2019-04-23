@@ -6,6 +6,7 @@
       WARNING - @mbg.generated
     -->
     <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="award_level" jdbcType="INTEGER" property="awardLevel"/>
     <result column="award_key" jdbcType="VARCHAR" property="awardKey" />
     <result column="is_send" jdbcType="BIT" property="isSend" />
   </resultMap>
