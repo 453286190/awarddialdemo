@@ -14,6 +14,7 @@ import com.example.awarddialdemo.mapper.UserMapper;
 import com.example.awarddialdemo.sevice.AwardService;
 import com.example.awarddialdemo.util.AliasMethod;
 import com.example.awarddialdemo.util.EntryUtil;
+import lombok.Synchronized;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -111,7 +112,8 @@ public class AwardServiceImpl implements AwardService {
      * 中奖之后，再按各奖品的比率分几等奖
      */
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
+    @Synchronized
     public void sendAward() throws MessageException {
         List<AwardBase> awardBaseList = awardBaseMapper.selectAll();
         List<User> userList = userMapper.selectAll();
@@ -148,6 +150,7 @@ public class AwardServiceImpl implements AwardService {
         Vector<UserAward> userAwardListAwardYes = new Vector<>(new LinkedList<>());
         //未中奖人
         Vector<UserAward> userAwardListAwardNo = new Vector<>(new LinkedList<>());
+        //这里在项目中改为一次传进来一个user
         for(User user : userList){
             //中奖人数已满
             if(awardYes >= awardList.size()){
