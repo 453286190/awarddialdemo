@@ -8,4 +8,8 @@ import org.springframework.stereotype.Repository;
 @Mapper
 @Repository
 public interface UserAwardMapper extends MyBaseMapper<UserAward> {
+    /**
+     * 清除所有
+     */
+    void clearAll();
 }

@@ -1,6 +1,7 @@
 package com.example.awarddialdemo.sevice.impl;
 
 import com.example.awarddialdemo.dto.AwardAddInfo;
+import com.example.awarddialdemo.dto.AwardDTO;
 import com.example.awarddialdemo.entity.Award;
 import com.example.awarddialdemo.entity.AwardBase;
 import com.example.awarddialdemo.entity.User;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tk.mybatis.mapper.entity.Example;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Vector;
@@ -52,6 +54,11 @@ public class AwardServiceImpl implements AwardService {
         if(!awardAddInfo.getAwardLevelSum().equals(awardAddInfo.getAwardDTOList().size())){
             throw new MessageException("奖品等级总数与各等级奖品数量信息不符");
         }
+        //获取奖品总数
+        Integer awardSum = 0;
+        for(AwardDTO awardDTO : awardAddInfo.getAwardDTOList()){
+            awardSum += awardDTO.getAwardNum();
+        }
 
         String awardTotleType = "一二三四五六七八九十";
         List<AwardBase> awardBaseList = new LinkedList<>();
@@ -61,8 +68,12 @@ public class AwardServiceImpl implements AwardService {
             awardBase.setAwardLevel(i + 1);
             //奖品说明
             awardBase.setDescription(awardTotleType.charAt(i) + "等奖");
+            //抽奖总人数
+            Integer userSum = awardAddInfo.getUserSum();
+            //当前等级的总奖品数
+            Integer awardLevelNum = awardAddInfo.getAwardDTOList().get(i).getAwardNum();
             //中奖概率
-            awardBase.setAwardOdd(0.0);
+            awardBase.setAwardOdd(1.0 * awardSum / userSum * awardLevelNum);
             awardBase.setAwardSend(0);
             awardBase.setAwardTotal(awardAddInfo.getAwardDTOList().get(i).getAwardNum());
             awardBaseList.add(awardBase);
@@ -104,6 +115,7 @@ public class AwardServiceImpl implements AwardService {
     public void sendAward() throws MessageException {
         List<AwardBase> awardBaseList = awardBaseMapper.selectAll();
         List<User> userList = userMapper.selectAll();
+        List<Award> awardList = awardMapper.selectAll();
         List<Double> oddList = new LinkedList<>();
         for(AwardBase awardBase : awardBaseList){
             oddList.add(awardBase.getAwardOdd());
@@ -112,6 +124,7 @@ public class AwardServiceImpl implements AwardService {
         for(Double d : oddList){
             allAdds += d;
         }
+//        重新计算中奖概率
         if(allAdds != 1.0 && allAdds != 0.0){
             for(int i = 0;i < oddList.size();i++){
                 oddList.set(i,1 / allAdds * oddList.get(i));
@@ -121,8 +134,8 @@ public class AwardServiceImpl implements AwardService {
         }
         //是否中奖，0.03为中奖概率，0.97为未中奖概率
         List<Double> isAwardList = new LinkedList<>();
-        isAwardList.add(0.03);
-        isAwardList.add(0.97);
+        isAwardList.add(1.0 * awardList.size()/userList.size());
+        isAwardList.add(1.0 - (1.0 * awardList.size()/userList.size()));
         //是否中奖采样
         AliasMethod aliasMethodIsAward = new AliasMethod(isAwardList);
         //中几等奖采样
@@ -137,13 +150,13 @@ public class AwardServiceImpl implements AwardService {
         Vector<UserAward> userAwardListAwardNo = new Vector<>(new LinkedList<>());
         for(User user : userList){
             //中奖人数已满
-            if(awardYes >= 15){
+            if(awardYes >= awardList.size()){
                 userAwardListAwardNo.add(addUserAwardNo(user));
                 awardNo ++;
-            }else if(awardYes < 15 && awardYes >= 0){
+            }else if(awardYes < awardList.size() && awardYes >= 0){
                 Integer isAward = aliasMethodIsAward.next();
 //              中奖
-                if(isAward.equals(0)){
+                if(isAward.equals(0) || awardNo >= (userList.size() - awardList.size())){
                     //抽奖
                     List<AwardBase> awardBaseList1 = rollAward(aliasMethodOdd);
                     if(awardBaseList1 != null && awardBaseList1.size() > 0){
@@ -160,13 +173,12 @@ public class AwardServiceImpl implements AwardService {
                             List<Integer> awardLevelNotSendList = getAwardLevelNotSend();
                             if(awardLevelNotSendList != null && awardLevelNotSendList.size() > 0){
                                 a:while (true){
-                                    Integer awardLevel = aliasMethodOdd.next();
+                                    //awardLevel比奖品等级少1
+                                    Integer awardLevel = aliasMethodOdd.next() + 1;
                                     if(awardLevelNotSendList.contains(awardLevel)){
                                         Award award = getAward(getAwardBaseByAwardLevel(awardLevel));
                                         userAwardListAwardYes.add(addUserAwardYes(user,award));
                                         awardYes++;
-                                        System.out.println("awardLevel:" + awardLevel);
-                                        System.out.println("awardYes:" + awardYes);
                                         break a;
                                     }else if(awardLevelNotSendList.size() == 1){
                                         Award award = getAward(getAwardBaseByAwardLevel(awardLevelNotSendList.get(0)));
@@ -183,11 +195,10 @@ public class AwardServiceImpl implements AwardService {
                         }
                     }
 //              未中奖
-                }else if(isAward.equals(1)){
+                }else{
                     userAwardListAwardNo.add(addUserAwardNo(user));
                     awardNo ++;
                 }
-
             }
         }
         if(userAwardListAwardYes.size() > 0){
@@ -215,6 +226,19 @@ public class AwardServiceImpl implements AwardService {
             award.setIsSend(false);
             awardMapper.updateByPrimaryKeySelective(award);
         }
+//        deleteAllUserAward();
+        userAwardMapper.clearAll();
+    }
+
+    /**
+     * 删除userAward所有数据将
+     */
+    public void deleteAllUserAward(){
+        List<UserAward> userAwardList = userAwardMapper.selectAll();
+        List<Long> idList = (userAwardList.stream().map(UserAward::getId).collect(Collectors.toList()));
+        Example example = new Example(UserAward.class);
+        example.createCriteria().andIn("id",idList);
+        userAwardMapper.deleteByExample(example);
     }
 
     /**
@@ -280,7 +304,8 @@ public class AwardServiceImpl implements AwardService {
      * @return
      */
     public List<AwardBase> rollAward(AliasMethod aliasMethodOdd){
-        Integer awardLevel = aliasMethodOdd.next();
+        //奖品等级和随机数差1
+        Integer awardLevel = aliasMethodOdd.next() + 1;
         Example example = new Example(AwardBase.class);
         example.createCriteria().andEqualTo("awardLevel",awardLevel);
         List<AwardBase> awardBaseList = awardBaseMapper.selectByExample(example);
