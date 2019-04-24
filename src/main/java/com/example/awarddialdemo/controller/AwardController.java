@@ -22,7 +22,7 @@ public class AwardController {
     private AwardService awardService;
 
     /**
-     * 新增奖品，中奖比率改库
+     * 新增奖品
      * @param awardAddInfo
      * @return
      */
